@@ -14,7 +14,7 @@ This skill addresses all three by running the project vision through structured 
 
 ## How It Works: Three Phases, Three Thinking Frameworks
 
-The skill orchestrates a three-phase process, each powered by a different thinking framework adapted from the [Thinking Frameworks Skill](https://github.com/anthropics/claude-code-plugins):
+The skill orchestrates a three-phase process, each powered by a different thinking framework adapted from the [Thinking Frameworks Skill](https://github.com/toddward/claude-skills-playground/tree/main/thinking-frameworks):
 
 ### Phase 1: Discovery (First Principles Thinking)
 
