@@ -69,74 +69,166 @@ it's too vague. Rewrite with specifics.
 
 ---
 
+## Acceptance Criteria vs. Definition of Done
+
+These are two distinct artifacts, and keeping them separate is one of the things this
+skill exists to enforce.
+
+| | Acceptance Criteria (AC) | Definition of Done (DoD) |
+|---|---|---|
+| **Scope** | Specific to *this* story | Universal — applies to *every* story |
+| **Answers** | "Is this story's behavior correct?" | "Has this story met our team's quality bar?" |
+| **Form** | Given/When/Then scenarios (preferred) | Checklist of team standards |
+| **Changes per story?** | Yes | No — set once, revisited rarely |
+
+**A story is *accepted* when its AC pass. A story is *done* when it's accepted AND the
+project DoD is satisfied.**
+
+## Acceptance Criteria Templates
+
+### Per-Story Acceptance Criteria
+
+AC describe the specific, testable behavior this story must deliver. Prefer
+Given/When/Then — it maps cleanly to test scenarios and forces the author to think in
+terms of observable behavior rather than implementation.
+
+Every story should have, at minimum:
+- A happy-path scenario
+- At least one error / negative-path scenario
+- At least one boundary / edge-case scenario
+
+```markdown
+**Acceptance Criteria — Story [E.N]: [Title]**
+
+*Scenario 1 — Happy path: [short name]*
+  Given [context / precondition]
+  When [user action or system event]
+  Then [observable outcome]
+  And [additional observable outcome]
+
+*Scenario 2 — Error path: [short name]*
+  Given [context — e.g., invalid input, missing permission, downstream failure]
+  When [action]
+  Then [observable outcome — error surface, fallback, retry, etc.]
+
+*Scenario 3 — Edge case: [short name]*
+  Given [boundary condition — empty / max / timeout / concurrent / rate-limited]
+  When [action]
+  Then [observable outcome]
+```
+
+**Testable-statement form** (acceptable for technical/infrastructure stories when
+Given/When/Then feels forced):
+
+```markdown
+**Acceptance Criteria — Story [E.N]: [Title]**
+
+1. The migration script is idempotent: running it twice produces zero schema changes
+   on the second run and no data loss.
+2. When the migration fails mid-run, the script rolls back cleanly and leaves the
+   database in its pre-run state, verified by schema hash comparison.
+3. The script completes within 15 minutes against a database with 10M rows of the
+   affected table, measured on the staging environment hardware.
+```
+
+### AC Quality Checklist
+
+Before accepting a set of AC, confirm:
+- [ ] Happy path covered
+- [ ] At least one error path covered
+- [ ] At least one boundary / edge case covered
+- [ ] Every scenario is observable (not "user feels satisfied" — what would you see?)
+- [ ] Every scenario is unambiguous (one pass/fail interpretation)
+- [ ] Every scenario is scoped to this story (no piggy-backed behavior from elsewhere)
+- [ ] No implementation details leak in ("uses Redis" is a design note, not AC)
+
+### AC Bad/Good Examples
+
+| Bad | Good |
+|---|---|
+| "Login works" | "Given valid email+password, when the user submits, then they receive a JWT with a 24-hour expiry and are redirected to /dashboard." |
+| "Handles errors" | "Given an email that is not registered, when the user submits, then the system returns a generic 'Invalid email or password' message (no user enumeration) and stays on /login." |
+| "Performance is acceptable" | "Given 100 concurrent login requests, when they execute, then the P95 response time is below 200ms measured by the load-test suite." |
+| "User auth is secure" *(also a DoD/AC confusion)* | AC: "Given 5 failed attempts in 15 minutes, when the user tries a 6th time, then the account is locked for 15 minutes and returns 403." DoD: covered universally by the project's "security scan passes" item. |
+
+---
+
 ## Definition of Done Templates
 
-### Epic-Level DoD
+### Project-Level DoD
 
-Epic DoD defines what "this capability is complete" means. It's broader than story DoD
-and often includes cross-cutting concerns.
+Defined **once** near the top of the plan. Applies to every story. Keep it short,
+stable, and universally applicable — if an item doesn't apply to every story, it
+belongs in AC or a story-specific DoD addition, not here.
+
+```markdown
+**Project Definition of Done**
+
+Every story, to be considered "done," must satisfy:
+
+Engineering:
+- [ ] Code reviewed and approved by ≥1 teammate
+- [ ] Unit tests present; coverage meets team threshold ([X]%)
+- [ ] Integration test covers the primary flow
+- [ ] CI pipeline passes (lint, build, test, security scan) with no new warnings
+
+Quality:
+- [ ] No new accessibility regressions (WCAG 2.1 AA for UI changes)
+- [ ] No new security findings above [severity threshold]
+- [ ] Performance budget not regressed beyond agreed tolerance
+
+Documentation:
+- [ ] User-facing changes documented (release notes + help docs as applicable)
+- [ ] Internal docs updated (runbook, architecture notes, ADRs as applicable)
+
+Delivery:
+- [ ] Deployed to staging; smoke test passes
+- [ ] Feature flag configured when rollout is risky
+- [ ] Monitoring/alerting in place for new or changed code paths
+```
+
+### Epic-Level DoD (Rollup)
+
+Epic DoD is a rollup view — "this capability is complete." It typically references the
+stories and adds a cross-cutting demo/acceptance moment.
 
 ```markdown
 **Definition of Done — Epic: [Name]**
 
-Functional Completeness:
-- [ ] All stories in this epic are completed and accepted
-- [ ] [Specific capability 1] is operational in production
-- [ ] [Specific capability 2] is operational in production
-- [ ] Edge cases defined in stories are handled
-
-Quality:
-- [ ] Performance: [specific metric, e.g., "P95 < 200ms under 500 concurrent users"]
-- [ ] Accessibility: [standard, e.g., "WCAG 2.1 AA compliant"]
-- [ ] Security: [requirement, e.g., "Passes OWASP Top 10 review"]
-
-Operational:
-- [ ] Monitoring and alerting configured for key metrics
-- [ ] Runbook/playbook documented for on-call team
-- [ ] Rollback procedure tested
-
-Stakeholder:
-- [ ] Demo completed with [stakeholder group]
-- [ ] Documentation/training materials delivered
+- [ ] All stories in this epic are accepted (AC pass) and done (project DoD satisfied)
+- [ ] End-to-end flow demoed to [stakeholder group] and approved
+- [ ] [Cross-cutting capability 1] operational in production
+- [ ] [Cross-cutting capability 2] operational in production
+- [ ] Rollback / sunset plan documented for the capability as a whole
 ```
 
-### Story-Level DoD
+### Story-Level DoD Fit
 
-Story DoD defines what "this story is shippable" means. Each criterion must be
-verifiable by someone who didn't write the code.
+Do **not** copy the project DoD into every story. Instead, each story states one of:
 
 ```markdown
-**Definition of Done — Story [E.N]: [Title]**
-
-Functional:
-- [ ] [Specific behavior 1 — include input, action, expected output]
-- [ ] [Specific behavior 2]
-- [ ] [Error state 1 — what happens when X goes wrong]
-- [ ] [Edge case 1 — boundary condition handled]
-
-Quality:
-- [ ] [Performance criterion if applicable — specific metric]
-- [ ] [Accessibility criterion if applicable]
-- [ ] [Browser/device compatibility if applicable]
-
-Technical:
-- [ ] Unit tests cover public methods ([coverage target]% line coverage)
-- [ ] Integration test validates [specific flow]
-- [ ] Code reviewed and approved by [N] team members
-- [ ] No new security vulnerabilities introduced (scan passes)
-
-Operational:
-- [ ] Feature flag configured for gradual rollout (if applicable)
-- [ ] [Deployment requirement if applicable]
+**DoD Fit:** Applies as-is — the project DoD is sufficient for this story.
 ```
 
-### Task-Level DoD
+```markdown
+**DoD Fit:** Applies as-is PLUS the following story-specific additions:
+- [ ] [Genuine story-specific addition — e.g., "data migration runbook reviewed
+      by SRE", "a11y audit performed on new UI surface", "privacy review
+      performed for new data collection"]
+```
 
-Task DoD is the simplest — it's the completion criterion for the work item.
+A story-specific DoD addition is justified only when it's something *this story*
+uniquely requires that isn't already in the project DoD. If it applies to many stories,
+promote it into the project DoD instead.
+
+### Task-Level Completion Criterion
+
+Tasks have a single, specific completion criterion — not AC, not DoD, just "when is
+this work item finished?"
 
 ```markdown
 **Task [E.N.T]: [Description]**
-**DoD:** [Single specific, verifiable statement]
+**Completion Criterion:** [Single specific, verifiable statement]
 
 Examples:
 - "Migration script runs successfully against staging database with 0 errors and all existing data preserved"
@@ -179,6 +271,33 @@ user needs and constraints that the entire plan is built on]
 
 ---
 
+## Project Definition of Done
+
+[Defined once. Every story inherits this DoD implicitly — stories should
+reference "DoD: applies as-is" unless they need documented additions.]
+
+**Engineering**
+- [ ] Code reviewed and approved by ≥1 teammate
+- [ ] Unit tests present; coverage meets team threshold
+- [ ] Integration test covers the primary flow
+- [ ] CI pipeline passes (lint, build, test, security scan)
+
+**Quality**
+- [ ] No new accessibility regressions (WCAG 2.1 AA for UI changes)
+- [ ] No new security findings above [severity threshold]
+- [ ] Performance budget not regressed beyond agreed tolerance
+
+**Documentation**
+- [ ] User-facing changes documented (release notes + help docs as applicable)
+- [ ] Internal docs updated (runbook, architecture notes, ADRs as applicable)
+
+**Delivery**
+- [ ] Deployed to staging; smoke test passes
+- [ ] Feature flag configured when rollout is risky
+- [ ] Monitoring/alerting in place for new or changed code paths
+
+---
+
 ## Epic Overview
 
 | # | Epic | Stories | Tasks | Intrinsic Value (1-line) | Size | Priority |
@@ -200,10 +319,10 @@ user needs and constraints that the entire plan is built on]
 - Learning Impact: [specific or N/A]
 **Value Summary:** [One sentence]
 
-**Definition of Done:**
-- [ ] [epic-level criterion]
-- [ ] [epic-level criterion]
-...
+**Epic-Level DoD (rollup):**
+- [ ] All stories in this epic accepted (AC pass) and done (project DoD satisfied)
+- [ ] [Cross-cutting criterion — e.g., end-to-end flow demoed and approved]
+- [ ] [Operational readiness — e.g., runbook delivered, rollback tested]
 
 **Fundamental Truths Addressed:** [#list]
 
@@ -220,20 +339,40 @@ user needs and constraints that the entire plan is built on]
 - Learning Impact: [specific or N/A]
 **Value Summary:** [One sentence]
 
-**Definition of Done:**
-- [ ] [specific, verifiable criterion]
-- [ ] [specific, verifiable criterion]
-...
+**Acceptance Criteria:**
+
+*Scenario 1 — Happy path: [short name]*
+  Given [context]
+  When [action]
+  Then [observable outcome]
+
+*Scenario 2 — Error path: [short name]*
+  Given [context]
+  When [action]
+  Then [observable outcome]
+
+*Scenario 3 — Edge case: [short name]*
+  Given [context]
+  When [action]
+  Then [observable outcome]
+
+[Add more scenarios only as needed. Use the testable-statement form instead of
+Given/When/Then when the story is infrastructure/technical and G/W/T feels forced.]
+
+**DoD Fit:** Applies as-is.
+*(If genuinely needed, replace with: "Applies as-is PLUS:" and list story-specific
+additions — e.g., "a11y audit on new UI surface", "privacy review for new data
+collection".)*
 
 **Size:** [S/M/L]
 **Dependencies:** [story IDs or "Independent"]
 
 **Tasks:**
 
-| # | Task | Why Necessary | DoD | Est. | Depends On |
-|---|------|--------------|-----|------|-----------|
-| E.N.1 | [task] | [connection to value] | [completion criterion] | [days] | [task IDs] |
-| E.N.2 | [task] | [connection to value] | [completion criterion] | [days] | [task IDs] |
+| # | Task | Why Necessary | Completion Criterion | Est. | Depends On |
+|---|------|--------------|---------------------|------|-----------|
+| E.N.1 | [task] | [connection to value / AC scenario] | [completion criterion] | [days] | [task IDs] |
+| E.N.2 | [task] | [connection to value / AC scenario] | [completion criterion] | [days] | [task IDs] |
 
 ---
 
@@ -295,6 +434,10 @@ when someone asks "why didn't we include X?"]
 - Use the same numbering scheme throughout: Epic N, Story E.N, Task E.N.T
   (e.g., Epic 1, Story 1.3, Task 1.3.2)
 - Every DoD item starts with a checkbox `- [ ]`
+- Every AC scenario uses the Given/When/Then form (or the testable-statement form
+  for infra/technical stories) — never a bare checkbox
+- The project DoD is defined once near the top of the plan; individual stories use
+  "DoD Fit: Applies as-is" rather than repeating it
 - Every value statement uses the four-dimension structure (mark N/A where applicable)
 - Every dependency reference uses the item's number, not its name
 - Size estimates use S/M/L for stories, hours/days for tasks

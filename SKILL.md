@@ -2,33 +2,37 @@
 name: red-hat-agile-skill
 description: >
   Generate structured agile project plans with Epics, Stories, and Tasks — each with
-  Definition of Done and intrinsic value statements. Uses thinking frameworks (First Principles,
-  Dialectical, Six Hats) as multi-agent teams to ensure plans are grounded in real user needs
-  rather than inherited assumptions. Use this skill whenever the user asks to create a project
-  plan, break down a project into epics and stories, generate a backlog, plan a sprint,
-  decompose requirements into agile artifacts, or wants to understand the value of their work
-  items. Also trigger when users say things like "plan this project", "create stories for",
-  "break this into tasks", "what epics do we need", "build me a backlog", or "help me plan
-  this feature". Even if the user doesn't explicitly say "agile" — if they're asking for
-  structured work decomposition with clear deliverables, this skill applies.
+  Acceptance Criteria, Definition of Done, and intrinsic value statements. Uses thinking
+  frameworks (First Principles, Dialectical, Six Hats) as multi-agent teams to ensure plans
+  are grounded in real user needs rather than inherited assumptions. Use this skill whenever
+  the user asks to create a project plan, break down a project into epics and stories, generate
+  a backlog, plan a sprint, decompose requirements into agile artifacts, write acceptance
+  criteria, define done, or wants to understand the value of their work items. Also trigger
+  when users say things like "plan this project", "create stories for", "break this into
+  tasks", "what epics do we need", "build me a backlog", "write acceptance criteria",
+  "define done for", or "help me plan this feature". Even if the user doesn't explicitly
+  say "agile" — if they're asking for structured work decomposition with clear deliverables,
+  this skill applies.
 ---
 
 # Red Hat Agile Skill
 
-Generate rigorous agile project plans where every item — Epic, Story, Task — has a clear
-Definition of Done and an articulated intrinsic value. The process uses structured thinking
-frameworks to ensure the plan is grounded in real needs, not inherited assumptions or
-wishful thinking.
+Generate rigorous agile project plans where every item — Epic, Story, Task — has clear
+Acceptance Criteria, a Definition of Done, and an articulated intrinsic value. The process
+uses structured thinking frameworks to ensure the plan is grounded in real needs, not
+inherited assumptions or wishful thinking.
 
 ## Why This Exists
 
-Most agile plans fail in one of three ways:
+Most agile plans fail in one of four ways:
 1. **Assumption inheritance** — Stories decompose what was asked for, not what's actually needed
-2. **Missing "done"** — Teams argue about completeness because DoD was vague or absent
-3. **No independent value** — Items only make sense as part of a chain, making prioritization impossible
+2. **Blurry acceptance** — "This story works" is never defined in testable terms, so QA and dev disagree mid-sprint
+3. **Missing "done"** — Teams argue about completeness because DoD was vague or absent
+4. **No independent value** — Items only make sense as part of a chain, making prioritization impossible
 
-This skill addresses all three by running the project vision through structured thinking
-before any decomposition begins.
+This skill addresses all four by running the project vision through structured thinking
+before any decomposition begins, and by treating Acceptance Criteria (per-story) and
+Definition of Done (universal) as distinct artifacts.
 
 ## Process Overview
 
@@ -43,7 +47,7 @@ Phase 1: DISCOVERY (First Principles)
       |
       v
 Phase 2: ELABORATION (Dialectical per Epic)
-  Advocate story breakdown → Challenge completeness → Integrate with DoD + value
+  Advocate story breakdown → Challenge completeness → Integrate with AC + DoD + value
       |
       v
 Phase 3: VALIDATION (Six Hats — abbreviated)
@@ -119,31 +123,35 @@ A validated list of Epics, each with:
 
 ## Phase 2: Elaboration (Dialectical per Epic)
 
-**Goal:** For each Epic, generate Stories and Tasks through structured debate. Each item
-gets a Definition of Done and intrinsic value statement.
+**Goal:** For each Epic, generate Stories and Tasks through structured debate. Each story
+gets **Acceptance Criteria** (story-specific, testable behaviors), compliance with the
+**project-level Definition of Done** (universal quality bar), and an intrinsic value
+statement.
 
 **Why this matters:** A single pass at story decomposition tends to produce either too-thin
-slices (tasks disguised as stories) or too-thick slices (epics disguised as stories). The
-dialectical process catches both failure modes.
+slices (tasks disguised as stories) or too-thick slices (epics disguised as stories). It
+also tends to blur acceptance — teams conflate "this specific story's behavior is correct"
+(AC) with "this story meets our team's quality bar" (DoD), leading to sprint-time fights
+about what "done" means. The dialectical process catches all three failure modes.
 
 Read `references/decomposition-agents.md` for agent prompts and orchestration.
 
 ### Agent Chain (runs once per Epic)
 
 ```
-Epic Definition + Fundamental Truths
+Epic Definition + Fundamental Truths + Project DoD
         |
         v
-  Story Advocate → Proposed stories with DoD + value
+  Story Advocate → Proposed stories with AC + DoD-fit + value
         |
         v
-  Story Challenger → Critique: INVEST violations, DoD gaps, value gaps
+  Story Challenger → Critique: INVEST, AC gaps, DoD-fit gaps, value gaps
         |
         v
-  Story Integrator → Final stories with refined DoD + intrinsic value
+  Story Integrator → Final stories with refined AC + value (DoD applies universally)
         |
         v
-  Task Decomposition → Tasks per story with DoD
+  Task Decomposition → Tasks per story with completion criteria
 ```
 
 ### INVEST Criteria (enforced by the Challenger)
@@ -159,9 +167,12 @@ Every Story must be:
 ### Phase 2 Output
 
 For each Epic:
-- Stories with DoD and intrinsic value
-- Tasks per story with DoD
+- Stories with **Acceptance Criteria** (Given/When/Then), intrinsic value, and a DoD-fit check
+- Tasks per story with completion criteria
 - Dependency map (which stories/tasks block others)
+
+A **project-level Definition of Done** (the universal quality bar applied to every story)
+is defined once, near the top of the plan — not repeated per story.
 
 ---
 
@@ -233,26 +244,72 @@ may not have standalone user value, but it should still articulate why it's nece
 
 ---
 
-## Definition of Done Framework
+## Acceptance Criteria & Definition of Done Framework
 
-DoD must be **specific, measurable, and verifiable**. Vague DoD is worse than no DoD
-because it creates false confidence.
+Acceptance Criteria (AC) and Definition of Done (DoD) are **two distinct artifacts**. Teams
+that conflate them end up arguing during sprint review about whether a story is "done,"
+because there's no shared contract for either what *this* story must do or what *every*
+story must satisfy.
 
-### DoD Quality Checklist
+### The Distinction
 
-A good DoD item answers YES to all of these:
-- Can someone unfamiliar with this work verify it? (observable)
-- Is there exactly one way to interpret this? (unambiguous)
-- Can we check it without subjective judgment? (measurable)
-- Does it include the acceptance boundary, not just the happy path? (complete)
+| | Acceptance Criteria (AC) | Definition of Done (DoD) |
+|---|---|---|
+| **Scope** | Specific to *this* story | Universal — applies to *every* story |
+| **Answers** | "Is this story's behavior correct?" | "Has this story met our quality bar?" |
+| **Form** | Given/When/Then scenarios (preferred) or numbered testable statements | Checklist of team standards |
+| **Owned by** | PO / BA, reviewed with QA | The team (engineering + QA + ops) |
+| **Changes per story?** | Yes — every story has its own | No — set once per team/project, revisited rarely |
+| **Example** | "Given a locked account, when the user submits valid credentials, then the system returns 403 with message 'Account locked. Try again in 15 minutes.'" | "All unit tests pass in CI; code reviewed by ≥1 teammate; feature flag configured; docs updated." |
 
-### Bad vs Good DoD Examples
+A story is **accepted** when its AC pass. A story is **done** when it's accepted AND the
+project DoD is satisfied.
 
-| Bad | Good |
-|-----|------|
-| "User authentication works" | "Users can log in with email/password, receive a JWT, and access protected routes. Invalid credentials return 401. Locked accounts return 403 with a message." |
-| "Tests pass" | "Unit tests cover all public methods (>90% line coverage). Integration test validates the full login-to-dashboard flow. All tests pass in CI." |
-| "Performance is acceptable" | "P95 response time < 200ms for login endpoint under 100 concurrent users, measured via load test." |
+### Acceptance Criteria Quality Checklist
+
+Good AC items answer YES to all of these:
+- Written from the user/system perspective (observable behavior, not implementation)
+- Covers the happy path, error paths, and at least one boundary/edge case
+- Unambiguous — one interpretation only
+- Testable — a QA engineer can write an automated or manual test directly from it
+- Scoped to this story — doesn't drag in behaviors that belong to another story
+
+**Preferred format: Given / When / Then** (Gherkin-style)
+```
+Scenario: User logs in with valid credentials
+  Given a registered user with email "user@example.com" and password "correct-pw"
+  When they submit the login form
+  Then they receive a JWT with a 24-hour expiry
+  And they are redirected to /dashboard
+```
+
+Plain testable statements are also acceptable when Given/When/Then feels forced (e.g., for
+infrastructure stories): "The migration script runs idempotently — re-running it produces
+no schema changes and no data loss."
+
+### Project Definition of Done
+
+Defined *once* for the whole plan, near the top. Every story inherits this DoD implicitly.
+Typical items:
+
+- Code reviewed and approved by ≥1 teammate
+- Unit tests present; CI pipeline passes (lint, test, build, security scan)
+- Integration test covers the primary flow
+- User-facing changes documented (release notes, help docs, runbook as applicable)
+- Deployed to staging; smoke test passes
+- Feature flag configured when rollout is risky
+- No new accessibility or security regressions introduced
+
+Teams may extend this — but the list should be **short, stable, and universally applicable**.
+If a criterion only applies to *some* stories, it belongs in AC, not DoD.
+
+### Bad vs Good AC Examples
+
+| Bad (blurs AC and DoD, or is vague) | Good (clean AC) |
+|---|---|
+| "User authentication works" | "Given valid email+password, when the user submits, then they receive a JWT and land on /dashboard. Given invalid credentials, then the response is 401 with message 'Invalid email or password.' Given 5 failed attempts in 15 min, then the account is locked for 15 min and a 403 is returned." |
+| "Tests pass and code is reviewed" | *(this is DoD, not AC — move it to the project DoD)* |
+| "Performance is acceptable" | "The login endpoint returns a response within 200ms (P95) under a load of 100 concurrent requests, validated by the load-test suite." |
 
 ---
 
@@ -273,6 +330,12 @@ Read `references/output-templates.md` for the complete templates with all fields
 ## Fundamental Truths
 [Numbered list from Archaeologist]
 
+## Project Definition of Done
+[The universal quality bar applied to every story in this plan. Defined once here.]
+- [ ] [team standard 1]
+- [ ] [team standard 2]
+- ...
+
 ## Epic Overview
 | # | Epic | Stories | Intrinsic Value (1-line) | Priority |
 |---|------|---------|--------------------------|----------|
@@ -281,17 +344,22 @@ Read `references/output-templates.md` for the complete templates with all fields
 
 ### Epic 1: [Name]
 **Intrinsic Value:** [value statement]
-**Definition of Done:** [epic-level DoD]
+**Epic-Level DoD:** [rollup criteria specific to the epic — e.g., "all stories accepted, end-to-end flow demoed"]
 
 #### Story 1.1: [Name]
 **Intrinsic Value:** [value statement]
-**Definition of Done:**
-- [ ] [specific, measurable criterion]
-- [ ] [specific, measurable criterion]
+
+**Acceptance Criteria:**
+- Scenario 1: Given... When... Then...
+- Scenario 2: Given... When... Then...
+- Edge case: Given... When... Then...
+
+**DoD Fit:** [confirm the project DoD applies cleanly; note any story-specific
+additions such as "also requires a data migration runbook"]
 
 **Tasks:**
-| # | Task | DoD | Estimate |
-|---|------|-----|----------|
+| # | Task | Completion Criterion | Estimate |
+|---|------|---------------------|----------|
 
 [...repeat for all stories and epics...]
 
@@ -329,7 +397,7 @@ The depth of analysis should match the project size:
 |---------|---------------------------|
 | Feature factory (building without purpose) | Every item must articulate intrinsic value |
 | Scope creep disguised as stories | Challenger agent enforces INVEST + traces back to fundamental truths |
-| "Done" means different things to different people | DoD is specific, measurable, verifiable — checked by Challenger |
+| "Done" means different things to different people | Project DoD is defined once and universal; per-story AC is testable and story-scoped — both checked by the Challenger |
 | Analysis paralysis | Scope calibration table right-sizes the process |
 | Dependency spaghetti | Stories must be Independent (INVEST); dependencies are explicitly mapped |
 
